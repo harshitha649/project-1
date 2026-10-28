@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agricultural Equipment Rental & Idle-Time Exchange | AgriShare</title>
+  <meta name="description" content="Peer-to-peer agricultural machinery rental and idle-time exchange for small farms. Overlap-safe booking, inspection checklists, and deposit escrow.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚜</text></svg>">
+</head>
+<body>
+
+  <!-- Top Persona Switcher Bar -->
+  <div class="persona-bar">
+    <div class="persona-bar-content">
+      <div class="persona-info">
+        <span>Active Persona:</span>
+        <strong id="persona-name">Joe Higgins</strong>
+        <span class="persona-badge" id="persona-role-badge">RENTER</span>
+        <span style="opacity: 0.8;" id="persona-farm">Red Cedar Organic Acres (Linn County)</span>
+      </div>
+      <div class="persona-selector">
+        <label for="persona-select">Switch Persona / Test Role:</label>
+        <select id="persona-select">
+          <option value="visitor">Visitor (Public Guest)</option>
+          <option value="u_renter_joe" selected>Joe Higgins (Renter - Small Organic Farm)</option>
+          <option value="u_owner_vance">Thomas Vance (Owner - 1,800-acre Grain Farm)</option>
+          <option value="u_owner_miller">Dave Miller (Owner - Forage & Livestock)</option>
+          <option value="u_operator_hank">Hank Miller (Field Inspector / Operator)</option>
+          <option value="u_admin_sarah">Sarah Chen (Platform Administrator)</option>
+        </select>
+        <div class="db-status-pill">
+          <span class="status-dot"></span>
+          <span id="db-status-text">PostgreSQL / Supabase Ready</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <div class="brand-logo" onclick="app.navigate('landing')">
+        <div class="brand-icon">🌾</div>
+        <div class="brand-text">
+          <h1>AgriShare Exchange</h1>
+          <span>Agricultural Equipment & Idle-Time Network</span>
+        </div>
+      </div>
+
+      <nav>
+        <ul class="nav-links">
+          <li><button class="nav-link active" onclick="app.navigate('landing')" data-view="landing">Home</button></li>
+          <li><button class="nav-link" onclick="app.navigate('catalog')" data-view="catalog">Browse Machinery</button></li>
+          <li><button class="nav-link" onclick="app.navigate('renter')" data-view="renter">Renter Hub</button></li>
+          <li><button class="nav-link" onclick="app.navigate('owner')" data-view="owner">Owner Fleet</button></li>
+          <li><button class="nav-link" onclick="app.navigate('operator')" data-view="operator">Operator Station</button></li>
+          <li><button class="nav-link" onclick="app.navigate('ledger')" data-view="ledger">Deposit Escrow</button></li>
+          <li><button class="nav-link" onclick="app.navigate('admin')" data-view="admin">Admin & Audit</button></li>
+        </ul>
+      </nav>
+
+      <div>
+        <button class="btn-post-listing" onclick="app.openNewListingModal()">
+          <span>+</span> List Idle Equipment
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Views Container -->
+  <main>
+
+    <!-- 1. LANDING PAGE VIEW -->
+    <section id="view-landing" class="view-section active">
+      <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-banner">
+          <div class="container hero-content">
+            <div class="hero-pill">
+              <span>🌾</span> Rural Machine Sharing & Idle-Time Optimization
+            </div>
+            <h2 class="hero-title">
+              Put Idle Farm Machinery to Work. <br>
+              <em>Empower Nearby Small Growers.</em>
+            </h2>
+            <p class="hero-subtitle">
+              Heavy tractors, combine harvesters, and precision seed drills sit idle for months between planting and harvest. AgriShare connects equipment owners with neighboring producers who need high-capacity machinery briefly—safeguarded by overlap-safe scheduling, standardized pre/post checklists, and simulated deposit escrow.
+            </p>
+            <div class="hero-actions">
+              <button class="btn-primary" onclick="app.navigate('catalog')">
+                🔍 Find Equipment Near You
+              </button>
+              <button class="btn-secondary" onclick="app.openNewListingModal()">
+                🚜 List Idle Machinery
+              </button>
+              <button class="btn-secondary" onclick="app.navigate('ledger')">
+                🛡️ View Escrow Ledger
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Platform Metrics Strip -->
+        <div class="metrics-strip">
+          <div class="metric-item">
+            <div class="metric-num" id="metric-total-listings">8</div>
+            <div class="metric-label">Registered Machines</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="metric-utilization">25%</div>
+            <div class="metric-label">Idle Utilization Rate</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="metric-escrow">$4,500</div>
+            <div class="metric-label">Escrow Deposits Held</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="metric-hours-shared">2,480</div>
+            <div class="metric-label">Field Hours Shared</div>
+          </div>
+        </div>
+
+        <!-- 4 Feature Pillars -->
+        <div class="pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon">⏱️</div>
+            <h3 class="pillar-title">Overlap-Safe Scheduling</h3>
+            <p class="pillar-desc">
+              Deterministic date-range collision detection in PostgreSQL & Express guarantees equipment is never double-booked, with transparent idle-window discount rates.
+            </p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">📋</div>
+            <h3 class="pillar-title">Pre & Post Handover Checklists</h3>
+            <p class="pillar-desc">
+              Field inspections capture baseline engine hours, fuel tank levels, hydraulic fluid checks, tire/track condition, and digital signoffs before release.
+            </p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🛡️</div>
+            <h3 class="pillar-title">Simulated Deposit Escrow</h3>
+            <p class="pillar-desc">
+              Automatic deposit holds upon booking request, damage arbitration with real repair cost deductions, and instant post-return releases.
+            </p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🚜</div>
+            <h3 class="pillar-title">Dry & Wet Hire Flexibility</h3>
+            <p class="pillar-desc">
+              Options for machine-only dry hire or owner/staff-operated wet hire for complex combines, high-clearance sprayers, and precision balers.
+            </p>
+          </div>
+        </div>
+
+        <!-- Featured Machinery Section -->
+        <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3 style="font-family: var(--font-serif); font-size: 1.8rem; color: var(--color-olive-900);">Available Machinery Highlights</h3>
+            <p style="color: var(--color-soil-500); font-size: 0.95rem;">Recently listed and idle special equipment across Cedar, Linn, and Benton counties.</p>
+          </div>
+          <button class="btn-action-sm btn-action-neutral" onclick="app.navigate('catalog')" style="padding: 8px 16px; font-size: 0.88rem;">
+            View All Equipment &rarr;
+          </button>
+        </div>
+
+        <div class="equipment-grid" id="landing-featured-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MACHINERY CATALOG VIEW -->
+    <section id="view-catalog" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Agricultural Equipment Catalog</h2>
+            <p class="dashboard-subtitle">Browse heavy machinery, tillage implements, seeders, and haulers available in nearby counties.</p>
+          </div>
+        </div>
+
+        <!-- Search & Filter Card -->
+        <div class="search-filter-card">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="filter-search">Search Keyword / Model</label>
+              <input type="text" id="filter-search" class="filter-input" placeholder="e.g. John Deere 8R, Combine, Seeder, Baler...">
+            </div>
+            <div class="filter-group">
+              <label for="filter-county">Service Area / County</label>
+              <select id="filter-county" class="filter-select">
+                <option value="All">All Counties</option>
+                <option value="Cedar">Cedar County</option>
+                <option value="Linn">Linn County</option>
+                <option value="Benton">Benton County</option>
+                <option value="Johnson">Johnson County</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-hire-type">Hire Arrangement</label>
+              <select id="filter-hire-type" class="filter-select">
+                <option value="All">All Hire Types</option>
+                <option value="Dry Hire">Dry Hire (Machine Only)</option>
+                <option value="Wet Hire">Wet Hire (Operator Provided)</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-max-price">Max Daily Rate (<span id="price-val">$2000</span>)</label>
+              <input type="range" id="filter-max-price" min="100" max="2500" step="50" value="2000" class="filter-input" style="padding: 4px;">
+            </div>
+            <div>
+              <button class="btn-action-sm btn-action-neutral" onclick="app.resetFilters()" style="padding: 10px 14px; width: 100%;">
+                Reset Filters
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Pills -->
+          <div class="category-pills">
+            <button class="category-pill active" onclick="app.setCategoryFilter('All', this)">All Categories</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Tractor', this)">🚜 Tractors</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Combine Harvester', this)">🌾 Combine Harvesters</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Seeder & Planter', this)">🌱 Seeders & Planters</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Tillage & Plow', this)">🚜 Tillage & Disc Harrows</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Baler', this)">📦 Balers</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Sprayer', this)">💧 Sprayers</button>
+            <button class="category-pill" onclick="app.setCategoryFilter('Hauling & Trailer', this)">🚛 Hauling & Trailers</button>
+          </div>
+        </div>
+
+        <!-- Equipment Grid -->
+        <div class="equipment-grid" id="catalog-equipment-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. RENTER HUB VIEW -->
+    <section id="view-renter" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Renter Operations Hub</h2>
+            <p class="dashboard-subtitle">Manage machinery reservations, active field checkouts, checklists, and damage logs.</p>
+          </div>
+          <div>
+            <button class="btn-primary" onclick="app.navigate('catalog')">
+              + Request New Equipment
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Booking Ref</th>
+                <th>Machinery</th>
+                <th>Rental Dates</th>
+                <th>Duration & Rate</th>
+                <th>Escrow Hold</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="renter-bookings-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. OWNER FLEET & APPROVALS VIEW -->
+    <section id="view-owner" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Owner Fleet & Approvals</h2>
+            <p class="dashboard-subtitle">Monitor listed machinery, idle calendar windows, and review pending booking requests.</p>
+          </div>
+          <div>
+            <button class="btn-post-listing" onclick="app.openNewListingModal()">
+              + Add Machinery to Fleet
+            </button>
+          </div>
+        </div>
+
+        <!-- Incoming Approval Requests -->
+        <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-olive-900); margin-bottom: 12px;">
+          Incoming Booking Requests (Requires Action)
+        </h3>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Booking Ref</th>
+                <th>Renter Farm</th>
+                <th>Equipment</th>
+                <th>Requested Dates</th>
+                <th>Task / Crop</th>
+                <th>Total Value</th>
+                <th>Status</th>
+                <th>Decide</th>
+              </tr>
+            </thead>
+            <tbody id="owner-approvals-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Owner's Equipment Fleet -->
+        <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-olive-900); margin-bottom: 12px; margin-top: 32px;">
+          Your Registered Fleet
+        </h3>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Equipment</th>
+                <th>Category</th>
+                <th>Operating Hours</th>
+                <th>Daily Rate</th>
+                <th>Idle Discount</th>
+                <th>Service County</th>
+                <th>Status</th>
+                <th>Manage</th>
+              </tr>
+            </thead>
+            <tbody id="owner-fleet-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. OPERATOR STATION VIEW -->
+    <section id="view-operator" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Certified Field Operator Station</h2>
+            <p class="dashboard-subtitle">Field mobilization, pre-rental release checkouts, and post-rental return inspections.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Booking Ref</th>
+                <th>Equipment</th>
+                <th>Renter</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th>Pre-Rental Checklist</th>
+                <th>Post-Return Checklist</th>
+                <th>Incident / Damage</th>
+              </tr>
+            </thead>
+            <tbody id="operator-bookings-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DEPOSIT ESCROW LEDGER VIEW -->
+    <section id="view-ledger" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Simulated Deposit Escrow Ledger</h2>
+            <p class="dashboard-subtitle">Real-time transparent tracking of security deposit holds, damage deductions, fuel penalties, and disbursements.</p>
+          </div>
+        </div>
+
+        <!-- Ledger Summary Metric Cards -->
+        <div class="metrics-strip" style="background-color: var(--color-olive-900);">
+          <div class="metric-item">
+            <div class="metric-num" id="ledger-active-escrow">$0.00</div>
+            <div class="metric-label">Active Escrow Balance</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="ledger-total-holds">$0.00</div>
+            <div class="metric-label">Total Deposits Held</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="ledger-total-deductions">$0.00</div>
+            <div class="metric-label">Deductions Applied</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-num" id="ledger-total-refunded">$0.00</div>
+            <div class="metric-label">Disbursed / Refunded</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Booking Ref</th>
+                <th>User / Renter</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Balance After</th>
+                <th>Transaction Description</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. PLATFORM ADMIN & AUDIT TRAIL VIEW -->
+    <section id="view-admin" class="view-section">
+      <div class="container">
+        <div class="dashboard-header">
+          <div>
+            <h2 class="dashboard-title">Platform Administration & Audit Trail</h2>
+            <p class="dashboard-subtitle">Supervisory dashboard, damage dispute arbitrations, and immutable system event log.</p>
+          </div>
+        </div>
+
+        <!-- Open Damage Incident Claims -->
+        <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-olive-900); margin-bottom: 12px;">
+          Damage Reports & Incident Resolution Queue
+        </h3>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Report ID</th>
+                <th>Booking Ref</th>
+                <th>Equipment</th>
+                <th>Severity</th>
+                <th>Incident Details</th>
+                <th>Estimated Cost</th>
+                <th>Deducted Amount</th>
+                <th>Status</th>
+                <th>Arbitrate</th>
+              </tr>
+            </thead>
+            <tbody id="admin-damages-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Immutable Audit Log Trail -->
+        <h3 style="font-family: var(--font-serif); font-size: 1.4rem; color: var(--color-olive-900); margin-bottom: 12px; margin-top: 36px;">
+          System Event & State Transition Audit Trail
+        </h3>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Event ID</th>
+                <th>Action</th>
+                <th>Entity Type</th>
+                <th>Entity ID</th>
+                <th>User</th>
+                <th>Audit Details</th>
+                <th>Logged At</th>
+              </tr>
+            </thead>
+            <tbody id="admin-audit-tbody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================================================
+       MODALS
+       ============================================================================== -->
+
+  <!-- BOOKING MODAL -->
+  <div id="modal-booking" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="booking-modal-title">Book Agricultural Equipment</h3>
+        <button class="btn-close-modal" onclick="app.closeModal('modal-booking')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="booking-equipment-summary" style="background: var(--bg-card-subtle); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 0.88rem;">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <form id="form-booking" onsubmit="app.handleBookingSubmit(event)">
+          <input type="hidden" id="book-listing-id">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="book-start-date">Start Date</label>
+              <input type="date" id="book-start-date" class="form-control" required onchange="app.calculateBookingPricing()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="book-end-date">End Date</label>
+              <input type="date" id="book-end-date" class="form-control" required onchange="app.calculateBookingPricing()">
+            </div>
+          </div>
+
+          <!-- Real-Time Conflict Alert Banner -->
+          <div id="booking-conflict-alert" style="display: none; background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; margin-top: 12px;">
+            <strong>⚠️ Schedule Conflict:</strong> This equipment is already reserved during those dates.
+          </div>
+
+          <div class="form-grid" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="book-delivery-mode">Delivery Option</label>
+              <select id="book-delivery-mode" class="form-control" onchange="app.calculateBookingPricing()">
+                <option value="Self Pickup">Self Pickup (Renter Hauls / $0)</option>
+                <option value="Owner Delivery">Owner Delivery ($85 local flat fee)</option>
+                <option value="Commercial Hauling">Commercial Flatbed Hauling ($220 fee)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="book-hire-type">Hire Type</label>
+              <select id="book-hire-type" class="form-control">
+                <option value="Dry Hire">Dry Hire (Machine Only)</option>
+                <option value="Wet Hire">Wet Hire (Owner / Staff Operator)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="book-crop-task">Intended Field Task & Crop</label>
+            <textarea id="book-crop-task" class="form-control" rows="2" placeholder="e.g. Deep ripping 120 acres before ground frost; seeding rye cover crop..." required></textarea>
+          </div>
+
+          <div class="checklist-item" style="margin-top: 14px;">
+            <input type="checkbox" id="book-insurance-confirm" required checked>
+            <label for="book-insurance-confirm" style="font-size: 0.82rem; color: var(--color-soil-700);">
+              I confirm valid farm liability insurance policy and agree to standardized pre/post handover checklist inspections.
+            </label>
+          </div>
+
+          <!-- Pricing & Escrow Breakdown Card -->
+          <div id="booking-price-breakdown" style="background: var(--bg-parchment); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px; margin-top: 18px;">
+            <div style="font-weight: 700; color: var(--color-olive-900); font-size: 0.9rem; margin-bottom: 8px;">Estimated Financial Breakdown:</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+              <span>Rental Charges (<span id="calc-days">0</span> days @ <span id="calc-rate">$0</span>/day):</span>
+              <strong id="calc-rental-total">$0.00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+              <span>Mobilization / Delivery Fee:</span>
+              <strong id="calc-delivery-fee">$0.00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; color: var(--color-rust-600);">
+              <span>Refundable Security Deposit Escrow Hold:</span>
+              <strong id="calc-deposit-hold">$0.00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 800; border-top: 1px solid var(--color-border); padding-top: 8px; margin-top: 8px; color: var(--color-olive-900);">
+              <span>Grand Total Initial Authorization:</span>
+              <strong id="calc-grand-total">$0.00</strong>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; background: transparent;">
+            <button type="button" class="btn-action-sm btn-action-neutral" onclick="app.closeModal('modal-booking')">Cancel</button>
+            <button type="submit" id="btn-submit-booking" class="btn-primary">Confirm & Hold Escrow</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- HANDOVER CHECKLIST MODAL (Pre-Rental & Post-Return) -->
+  <div id="modal-handover" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="handover-modal-title">Equipment Handover Checklist</h3>
+        <button class="btn-close-modal" onclick="app.closeModal('modal-handover')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-handover" onsubmit="app.handleHandoverSubmit(event)">
+          <input type="hidden" id="handover-booking-id">
+          <input type="hidden" id="handover-checklist-type">
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="handover-inspector">Inspector / Certifier Name</label>
+              <input type="text" id="handover-inspector" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="handover-meter">Engine Meter Hours</label>
+              <input type="number" step="0.1" id="handover-meter" class="form-control" required placeholder="e.g. 1420.5">
+            </div>
+          </div>
+
+          <!-- Fuel Slider with Live Visual Gauge -->
+          <div class="fuel-gauge-container" style="margin-top: 14px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">
+              <span>Fuel Tank Level: <span id="fuel-level-display" style="color: var(--color-olive-800);">100%</span></span>
+              <span id="fuel-charge-preview" style="color: var(--color-rust-600); font-weight: 600;">Full standard met</span>
+            </div>
+            <div class="fuel-gauge-bar">
+              <div id="fuel-gauge-bar-fill" class="fuel-gauge-fill" style="width: 100%;"></div>
+            </div>
+            <input type="range" id="handover-fuel" min="0" max="100" step="5" value="100" class="filter-input" style="width: 100%;" oninput="app.updateFuelDisplay(this.value)">
+          </div>
+
+          <!-- Inspection Checklist Items -->
+          <div style="font-weight: 700; font-size: 0.82rem; text-transform: uppercase; color: var(--color-soil-700); margin-top: 16px; margin-bottom: 6px;">
+            Safety & Mechanical Verification Checklist:
+          </div>
+          <div class="checklist-matrix">
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-oil" checked>
+              <span>Engine Oil & Coolant OK</span>
+            </label>
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-hydraulic" checked>
+              <span>Hydraulic Fluid & Couplers OK</span>
+            </label>
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-tires" checked>
+              <span>Tires / Tracks Pressure OK</span>
+            </label>
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-shields" checked>
+              <span>Safety Shields & PTO Guard In Place</span>
+            </label>
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-lights" checked>
+              <span>Hazard Lights & Signals Functional</span>
+            </label>
+            <label class="checklist-item">
+              <input type="checkbox" id="chk-clean" checked>
+              <span>Cab Clean & Free of Debris</span>
+            </label>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="handover-notes">Condition Notes & Observations</label>
+            <textarea id="handover-notes" class="form-control" rows="2" placeholder="Record pin conditions, grease levels, or baseline scratches..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="handover-initials">Signoff Initials / Digital Signature</label>
+            <input type="text" id="handover-initials" class="form-control" placeholder="e.g. HM / JH" required maxlength="10">
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; background: transparent;">
+            <button type="button" class="btn-action-sm btn-action-neutral" onclick="app.closeModal('modal-handover')">Cancel</button>
+            <button type="submit" class="btn-primary">Submit Inspection Signoff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAMAGE REPORT MODAL -->
+  <div id="modal-damage" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>File Machinery Incident / Damage Report</h3>
+        <button class="btn-close-modal" onclick="app.closeModal('modal-damage')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-damage" onsubmit="app.handleDamageSubmit(event)">
+          <input type="hidden" id="damage-booking-id">
+          <input type="hidden" id="damage-listing-id">
+
+          <div class="form-group">
+            <label class="form-label" for="damage-severity">Severity Level</label>
+            <select id="damage-severity" class="form-control" required>
+              <option value="Cosmetic / Scratches">Cosmetic / Minor Scratches (Operable)</option>
+              <option value="Minor Mechanical (Operable)">Minor Mechanical / Worn Bracket (Operable)</option>
+              <option value="Major Inoperable / Safety Hazard">Major Inoperable / Frame Damage / Safety Hazard</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="damage-desc">Incident Description</label>
+            <textarea id="damage-desc" class="form-control" rows="3" placeholder="Describe where and how the incident occurred (e.g. struck rock ledge, hydraulic coupling seal blown)..." required></textarea>
+          </div>
+
+          <div class="form-grid" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="damage-cost">Estimated Repair Cost ($)</label>
+              <input type="number" step="0.01" id="damage-cost" class="form-control" placeholder="e.g. 250.00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="damage-photo">Photo Evidence URL</label>
+              <input type="url" id="damage-photo" class="form-control" value="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80">
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; background: transparent;">
+            <button type="button" class="btn-action-sm btn-action-neutral" onclick="app.closeModal('modal-damage')">Cancel</button>
+            <button type="submit" class="btn-primary" style="background-color: var(--color-rust-800);">Submit Incident Report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARBITRATE DAMAGE CLAIM MODAL (Admin & Owner) -->
+  <div id="modal-resolve-damage" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Arbitrate Damage & Process Escrow Settlement</h3>
+        <button class="btn-close-modal" onclick="app.closeModal('modal-resolve-damage')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-resolve-damage" onsubmit="app.handleResolveDamageSubmit(event)">
+          <input type="hidden" id="resolve-damage-id">
+
+          <div id="resolve-damage-summary" style="background: var(--bg-card-subtle); padding: 12px; border-radius: var(--radius-sm); font-size: 0.88rem;">
+            <!-- Summary populated by JavaScript -->
+          </div>
+
+          <div class="form-grid" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="resolve-actual-cost">Actual Repair Invoice ($)</label>
+              <input type="number" step="0.01" id="resolve-actual-cost" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="resolve-deduction">Deducted from Deposit Escrow ($)</label>
+              <input type="number" step="0.01" id="resolve-deduction" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="resolve-notes">Settlement / Arbitration Notes</label>
+            <textarea id="resolve-notes" class="form-control" rows="3" placeholder="Explain invoice source, parts replaced, and refund balance..." required></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; background: transparent;">
+            <button type="button" class="btn-action-sm btn-action-neutral" onclick="app.closeModal('modal-resolve-damage')">Cancel</button>
+            <button type="submit" class="btn-primary">Apply Deduction & Settle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW LISTING MODAL -->
+  <div id="modal-new-listing" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>List Agricultural Equipment on AgriShare</h3>
+        <button class="btn-close-modal" onclick="app.closeModal('modal-new-listing')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-new-listing" onsubmit="app.handleListingSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label class="form-label" for="new-title">Equipment Title</label>
+              <input type="text" id="new-title" class="form-control" placeholder="e.g. John Deere 8R 410 Row-Crop Tractor" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-category">Category</label>
+              <select id="new-category" class="form-control" required>
+                <option value="Tractor">Tractor</option>
+                <option value="Combine Harvester">Combine Harvester</option>
+                <option value="Seeder & Planter">Seeder & Planter</option>
+                <option value="Tillage & Plow">Tillage & Plow</option>
+                <option value="Baler">Baler</option>
+                <option value="Sprayer">Sprayer</option>
+                <option value="Hauling & Trailer">Hauling & Trailer</option>
+                <option value="Specialty">Specialty</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-county">County Service Location</label>
+              <select id="new-county" class="form-control" required>
+                <option value="Cedar">Cedar County</option>
+                <option value="Linn">Linn County</option>
+                <option value="Benton">Benton County</option>
+                <option value="Johnson">Johnson County</option>
+                <option value="Polk">Polk County</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-make">Manufacturer / Make</label>
+              <input type="text" id="new-make" class="form-control" placeholder="e.g. Case IH, John Deere, Kubota" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-model">Model Number</label>
+              <input type="text" id="new-model" class="form-control" placeholder="e.g. Axial-Flow 8250" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-year">Year</label>
+              <input type="number" id="new-year" class="form-control" value="2022" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-hp">Horsepower (HP)</label>
+              <input type="number" id="new-hp" class="form-control" placeholder="e.g. 410">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-daily-rate">Daily Rate ($)</label>
+              <input type="number" step="0.01" id="new-daily-rate" class="form-control" placeholder="e.g. 850.00" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-deposit">Security Deposit ($)</label>
+              <input type="number" step="0.01" id="new-deposit" class="form-control" placeholder="e.g. 1500.00" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-discount">Idle Window Discount (%)</label>
+              <input type="number" id="new-discount" class="form-control" value="20" min="0" max="60">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="new-hire-opt">Hire Option</label>
+              <select id="new-hire-opt" class="form-control">
+                <option value="Dry Hire (Machine Only)">Dry Hire (Machine Only)</option>
+                <option value="Wet Hire (Operator Provided)">Wet Hire (Operator Provided)</option>
+                <option value="Either Option Available">Either Option Available</option>
+              </select>
+            </div>
+
+            <div class="form-group form-full">
+              <label class="form-label" for="new-desc">Machinery Description & Idle Windows</label>
+              <textarea id="new-desc" class="form-control" rows="2" placeholder="List technology, GPS guidance, tire setups, and typical idle dates..." required></textarea>
+            </div>
+
+            <div class="form-group form-full">
+              <label class="form-label" for="new-image">Photo URL</label>
+              <input type="url" id="new-image" class="form-control" value="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80">
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding: 16px 0 0 0; background: transparent;">
+            <button type="button" class="btn-action-sm btn-action-neutral" onclick="app.closeModal('modal-new-listing')">Cancel</button>
+            <button type="submit" class="btn-primary">Publish Equipment Listing</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h4>🌾 AgriShare Exchange</h4>
+          <p>Rural agricultural machinery sharing, idle-time optimization, and peer-to-peer equipment exchange.</p>
+        </div>
+        <div>
+          <button class="btn-secondary" onclick="app.navigate('catalog')" style="font-size: 0.85rem; padding: 8px 16px;">
+            Catalog
+          </button>
+          <button class="btn-secondary" onclick="app.navigate('ledger')" style="font-size: 0.85rem; padding: 8px 16px; margin-left: 8px;">
+            Escrow Ledger
+          </button>
+          <button class="btn-secondary" onclick="app.navigate('admin')" style="font-size: 0.85rem; padding: 8px 16px; margin-left: 8px;">
+            Audit Trail
+          </button>
+        </div>
+      </div>
+      <div class="footer-copy">
+        <span>&copy; 2026 AgriShare Agricultural Equipment Exchange. Built with Node.js, Express, and Supabase PostgreSQL.</span>
+        <span>Standardized Checklists &bull; Escrow Protection &bull; Overlap-Safe Scheduling</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
